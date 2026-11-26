@@ -2,7 +2,8 @@ package com.example.api3.productsProcessor
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.activity.ComponentActivity
 import retrofit2.Call
 import retrofit2.Callback
@@ -11,14 +12,17 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : ComponentActivity() {
-    private var products: List<Product> = emptyList()
+    private lateinit var listado: ProductListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(TextView(this).apply {
-            text = "Consulta de productos: ver Logcat (Productos)"
-            setPadding(32, 64, 32, 32)
-        })
+        listado = ProductListView(this)
+        setContentView(listado)
+        ViewCompat.setOnApplyWindowInsetsListener(listado) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
         obtenerProductos()
     }
 
@@ -36,7 +40,8 @@ class MainActivity : ComponentActivity() {
                 response: Response<ProductResponse>
             ) {
                 if (response.isSuccessful) {
-                    products = response.body()?.products ?: emptyList()
+                    val products = response.body()?.products.orEmpty()
+                    listado.mostrarProductos(products)
                     products.forEach { product ->
                         Log.d("Main Activity","Product: ${product.name}")
                     }
